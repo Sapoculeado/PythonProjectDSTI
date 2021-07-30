@@ -1,0 +1,72 @@
+from selenium import webdriver
+import pandas as pd
+from bs4 import BeautifulSoup
+from datetime import date
+
+
+
+driver = webdriver.Chrome("./chromedriver.exe")
+
+dataframe = pd.DataFrame(columns=["Title","Location","Company","Type-of-contract","Salary","Description","Date","Website"])                        
+z=0                        
+for i in range(0,260,10):
+   
+    z+=1
+    
+    driver.get("https://fr.indeed.com/jobs?q=data+analyst&start="+str(i))
+    driver.implicitly_wait(4)
+    if i == 10:
+        buton2 = driver.find_element_by_id("popover-x")
+        buton2.click()
+    else:    
+        for job in driver.find_elements_by_class_name('job_seen_beacon') :
+
+            result_html=job.get_attribute('innerHTML')
+            soup = BeautifulSoup(result_html,'html.parser')
+            #find the span tag that have a attribute named title
+            try:
+                title = soup.find("span", {"title" : True}).text
+            except:
+                title='None'
+
+            try:
+                location = soup.find("div", class_="companyLocation").text
+            except:
+                location ='None'
+
+            try:
+                company=soup.find("span",class_="companyName").text
+            except:
+                company ='None'
+
+            try :
+                salary = soup.find("span", class_="salary-snippet")
+            except :
+                salary ='None'
+
+            try:
+                job.click()
+            except:
+                buton = driver.find_element_by_id("onetrust-accept-btn-handler")
+                buton.click()
+
+            driver.implicitly_wait(1) 
+            try:
+                desc = driver.find_element_by_id("vjs-desc").text
+            except : desc = 'None'
+
+            try:
+                contract = driver.find_element_by_xpath("//*[@id='vjs-jobinfo']/div[3]/span[1]").text
+            except : 
+                contract = 'None'
+
+            try:
+                salary = driver.find_element_by_xpath("//*[@id='vjs-jobinfo']/div[3]/span[3]").text
+            except : 
+                salary = 'None'
+            date = date.today()
+            website = "Indeed"
+            dataframe = dataframe.append({"Title" : title, "Location" : location, "Company" : company, "Description" : desc, "Type-of-contract" : contract, "Salary" : salary, "Date" : date, "Website" : website},ignore_index=True)                       
+        print(z)
+                         
+dataframe
